@@ -32,7 +32,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
                       thinning=1,startNeg=100/365,startOff.r=1,startOff.p=0.5,startPi=0.5,prior_pi_a=5,prior_pi_b=1,
                       updateNeg=TRUE,updateOff.r=TRUE,updateOff.p=FALSE,updatePi=TRUE,
                       share=NULL,
-                      startCTree_lst=rep(NA,length(ptree_lst)),updateTTree=TRUE,optiStart=TRUE,dateT=Inf) {
+                      startCTree_lst=rep(NA,length(ptree_lst)),updateTTree=TRUE,optiStart=TRUE,dateT=Inf, epiData_lst, penalize = TRUE, trackPenalty = FALSE) {
 
   ptree_lst <- purrr::map(ptree_lst, function(x) within(x, ptree[,1] <- ptree[,1]+runif(nrow(ptree))*1e-10))
   #MCMC algorithm
@@ -54,17 +54,29 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
   off.p_lst <- as.list(rep(off.p, ntree))
   pi_lst <- as.list(rep(pi, ntree))
   not_share <- setdiff(c("neg", "off.r", "off.p", "pi"), share)
+  
+  penalize <- !missing(epiData_lst) && penalize
+  trackPenalty <- !missing(epiData_lst) && trackPenalty
 
-  one_update <- function(ctree, pTTree, pPTree, neg, off.r, off.p, pi, not_share){
+  one_update <- function(ctree, pTTree, pPTree, neg, off.r, off.p, pi, not_share, epiData, penalize, trackPenalty){
     # Get a copy of current ttree
     ttree <- extractTTree(ctree)
+    
+    if(trackPenalty){
+      penalty <- epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty)
+      penaltyInfo <- penalty[2] 
+      penalty <- unlist(penalty[1])
+    } else if(penalize) {
+      penalty <- unlist(epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty))
+    }
+    logPen <- ifelse(penalize,log(1+sum(penalty)),0)
     
     if (updateTTree) {
       #Metropolis update for transmission tree 
       prop <- proposal(ctree$ctree)
       ctree2 <- list(ctree=prop$tree,nam=ctree$nam)
       ttree2 <- extractTTree(ctree2)
-      pTTree2 <- probTTree(ttree2$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) 
+      pTTree2 <- probTTree(ttree2$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
       pPTree2 <- probPTreeGivenTTree(ctree2,neg) 
       if (log(runif(1)) < log(prop$qr)+pTTree2 + pPTree2-pTTree-pPTree)  { 
         ctree <- ctree2 
@@ -84,7 +96,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
     if (("off.r" %in% not_share) && updateOff.r) {
       #Metropolis update for off.r, assuming Exp(1) prior 
       off.r2 <- abs(off.r + (runif(1)-0.5)*0.5)
-      pTTree2 <- probTTree(ttree$ttree,off.r2,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) 
+      pTTree2 <- probTTree(ttree$ttree,off.r2,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
       if (log(runif(1)) < pTTree2-pTTree-off.r2+off.r)  {off.r <- off.r2;pTTree <- pTTree2}
     }
     
@@ -92,7 +104,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
       #Metropolis update for off.p, assuming Unif(0,1) prior 
       off.p2 <- abs(off.p + (runif(1)-0.5)*0.1)
       if (off.p2>1) off.p2=2-off.p2
-      pTTree2 <- probTTree(ttree$ttree,off.r,off.p2,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) 
+      pTTree2 <- probTTree(ttree$ttree,off.r,off.p2,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
       if (log(runif(1)) < pTTree2-pTTree)  {off.p <- off.p2;pTTree <- pTTree2}
     }
     
@@ -101,18 +113,40 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
       pi2 <- pi + (runif(1)-0.5)*0.1
       if (pi2<0.01) pi2=0.02-pi2
       if (pi2>1) pi2=2-pi2
-      pTTree2 <- probTTree(ttree$ttree,off.r,off.p,pi2,w.shape,w.scale,ws.shape,ws.scale,dateT) 
+      pTTree2 <- probTTree(ttree$ttree,off.r,off.p,pi2,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
       log_beta_ratio <- (prior_pi_a - 1) * log(pi2) + (prior_pi_b - 1) * log(1 - pi2) -
         (prior_pi_a - 1) * log(pi) - (prior_pi_b - 1) * log(1 - pi)
       if (log(runif(1)) < pTTree2-pTTree + log_beta_ratio)  {pi <- pi2;pTTree <- pTTree2}       
     }
     
-    list(ctree=ctree, pTTree=pTTree, pPTree=pPTree, neg=neg, off.r=off.r, off.p=off.p, pi=pi)
+    if(trackPenalty){
+      list(ctree=ctree, pTTree=pTTree, pPTree=pPTree, neg=neg, off.r=off.r, off.p=off.p, pi=pi, penalty = penalty, penaltyInfo = penaltyInfo)   
+    } else {
+      list(ctree=ctree, pTTree=pTTree, pPTree=pPTree, neg=neg, off.r=off.r, off.p=off.p, pi=pi) 
+    }
+   
   }
   
-  one_update_share <- function(ctree_lst, pTTree_lst, pPTree_lst, neg_lst, off.r_lst, off.p_lst, pi_lst, share){
+  one_update_share <- function(ctree_lst, pTTree_lst, pPTree_lst, neg_lst, off.r_lst, off.p_lst, pi_lst, share, epiData_lst, penalize, trackPenalty){
     ttree_lst <- purrr::map(ctree_lst, extractTTree)
     ttree_lst <- purrr::map(ttree_lst, "ttree") # list of ttree matrices
+    
+    if(trackPenalty){
+      penalty_lst <- purrr::map(ttree_lst, function(t){
+        purrr::map(epiData_lst, function(i){
+          epiPenTTree(ttree = t, epiData = i, penaltyInfo = trackPenalty) 
+        })
+      }) 
+      penaltyInfo <- penalty[2] 
+      penalty <- unlist(penalty[1])
+    } else if(penalize) {
+      penalty_lst <- purrr::map(ttree_lst, function(t){
+        purrr::map(epiData_lst, function(i){
+          epiPenTTree(ttree = t, epiData = i, penaltyInfo = trackPenalty) 
+        })
+      }) 
+    }
+    logPen <- ifelse(penalize,log(1+sum(penalty)),0)
     
     if(("neg" %in% share) && updateNeg){
       neg <- neg_lst[[1]]
@@ -184,7 +218,17 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
   pPTree_lst <- vector("list", ntree)
   for(k in 1:ntree){
     ttree <- extractTTree(ctree_lst[[k]])
-    pTTree_lst[[k]] <- probTTree(ttree$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) 
+    
+    if(trackPenalty){
+      penalty <- epiPenTTree(ttree, epiData_lst[k], penaltyInfo = trackPenalty)
+      penaltyInfo <- penalty[2] 
+      penalty <- unlist(penalty[1])
+    } else if(penalize) {
+      penalty <- unlist(epiPenTTree(ttree, epiData_lst[k], penaltyInfo = trackPenalty))
+    }
+    logPen <- ifelse(penalize,log(1+sum(penalty)),0)
+    
+    pTTree_lst[[k]] <- probTTree(ttree$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
     pPTree_lst[[k]] <- probPTreeGivenTTree(ctree_lst[[k]],neg)  
   }
   mcmc_state <- list(ctree=ctree_lst, pTTree=pTTree_lst, pPTree=pPTree_lst, 
@@ -194,8 +238,10 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
   pb <- utils::txtProgressBar(min=0,max=mcmcIterations,style = 3)
   for (i in 1:mcmcIterations) {
     
+    if(penalize || trackPenalty)  mcmc_state[["epiData"]] = epiData_lst
+    
     # Update shared parameters
-    out <- with(mcmc_state, one_update_share(ctree, pTTree, pPTree, neg, off.r, off.p, pi, share))
+    out <- with(mcmc_state, one_update_share(ctree, pTTree, pPTree, neg, off.r, off.p, pi, share, epiData, penalize=penalize, trackPenalty=trackPenalty))
     mcmc_state[["ctree"]] <- out[["ctree"]]
     mcmc_state[["pTTree"]] <- out[["pTTree"]]
     mcmc_state[["pPTree"]] <- out[["pPTree"]]
@@ -205,8 +251,8 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
     mcmc_state[["pi"]] <- out[["pi"]]
 
     # Update unshared parameters
-    state_new <- purrr::pmap(mcmc_state, one_update, not_share=not_share)
-    
+    state_new <- purrr::pmap(mcmc_state, one_update, not_share=not_share, penalize=penalize, trackPenalty=trackPenalty)
+     
     if (i%%thinning == 0) {
       #Record things 
       utils::setTxtProgressBar(pb, i)
@@ -222,6 +268,12 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
         record[[k]][[i/thinning]]$w.scale <- w.scale
         record[[k]][[i/thinning]]$ws.shape <- ws.shape
         record[[k]][[i/thinning]]$ws.scale <- ws.scale
+        if(trackPenalty){
+          record[[k]][[i/thinning]]$penalty.exposure <- unname(state_new[[k]]$penalty[1])
+          record[[k]][[i/thinning]]$penalty.contact <- unname(state_new[[k]]$penalty[2])
+          record[[k]][[i/thinning]]$penalty.location <- unname(state_new[[k]]$penalty[3])
+          record[[k]][[i/thinning]]$penalty.information <- state_new[[k]]$penaltyInfo
+        }
         record[[k]][[i/thinning]]$source <- with(state_new[[k]]$ctree, ctree[ctree[which(ctree[,4]==0),2],4])
         if (record[[k]][[i/thinning]]$source<=length(state_new[[k]]$ctree$nam)) 
           record[[k]][[i/thinning]]$source=state_new[[k]]$ctree$nam[record[[k]][[i/thinning]]$source] 
@@ -230,7 +282,10 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
     }
     # Assign updated state to current state
     mcmc_state <- purrr::transpose(state_new)
-
+    if(trackPenalty){
+      mcmc_state$penalty <- NULL 
+      mcmc_state$penaltyInfo <- NULL 
+    }    
   }#End of main MCMC loop
 
   return(record)

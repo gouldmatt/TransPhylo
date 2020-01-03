@@ -54,3 +54,92 @@ simulateOutbreak = function(off.r=1,off.p=0.5,neg=0.25,nSampled=NA,pi=0.5,w.shap
   truth[,1]<-truth[,1]+dateStartOutbreak
   return(list(ctree=truth,nam=mtt$nam,probttree=probttree,probwithin=probwithin))
 }  
+
+#' Simulate exposure data for the given ctree 
+#' @param ctree Combined phylogenetic/transmission tree
+#' @param min The min time difference when determining how close the exposure is to the ctree times 
+#' @param max The max time difference when determining how close the exposure is to the ctree times 
+#' @param propCases Proportion of cases to generate exporsure data for
+#' @return The case.info data.frame containing the simulated exposure times for each case 
+#' @author Matthew Gould
+#' @export
+simulateExposure <- function(ctree, min = 0.1, max = 1, propCases = 0.3){
+  
+  ttree <- extractTTree(ctree)
+  
+  nsam <- length(ttree$nam)
+  
+  numCasesToPick <- ceiling(propCases*nsam)
+  if(!(numCasesToPick %in% 1:nsam)){
+    stop("incorrect propCases must be a (non-zero) percentage of cases to generate an exporsure window for")
+  }
+  
+  
+  # pick a random sample of sampled cases 
+  casesToUse <- sample(ttree$nam, numCasesToPick)
+  
+  
+  startTimes <- sapply(casesToUse, function(i){
+    row <- which(ttree$nam == i, arr.ind = T)
+    ttree$ttree[row,1] - runif(1,min,max)
+  })
+  
+  endTimes <- sapply(casesToUse, function(i){
+    row <- which(ttree$nam == i, arr.ind = T)
+    
+    infectees <- which(ttree$ttree[,3] == row, arr.ind = T)
+    infecteesInfT <- ttree$ttree[infectees,1]
+    
+    max(c(ttree$ttree[row,2],infecteesInfT)) + runif(1,min,max)
+  })
+  
+  return(data.frame(row.names = casesToUse, start = startTimes, end = endTimes)) 
+}
+
+
+#' Simulate contact data for the given ctree
+#' @param ctree Combined phylogenetic/transmission tree
+#' @param min The min time difference when determining how close the contact times are to the ctree times 
+#' @param max The max time difference when determining how close the contact times are to the ctree times 
+#' @param propCases Proportion of the valid transmissions to simulate contact data for 
+#' @return The contact.info data.frame containing the simulated contact pairs 
+#' @author Matthew Gould
+#' @export
+simulateContact <- function(ctree, min = 0.1, max = 1, propCases = 0.2){
+  
+  ttree <- extractTTree(ctree)
+  
+  nsam <- length(ttree$nam)
+  
+  numCasesToPick <- ceiling(propCases*nsam)
+  if(!(numCasesToPick %in% 1:nsam)){
+    stop("incorrect propCases must be a (non-zero) percentage of cases to try and simulate contact info for")
+  }
+  
+  infectees <- 1:nrow(ttree$ttree)
+  infectors <- ttree$ttree[,3]
+  
+  zeroInfectors <- infectors == 0
+  infectors[zeroInfectors] <- NA
+  unsampled <- is.na(ttree$nam[infectors]) | is.na(ttree$nam[infectees])
+  
+  infectors <- infectors[!unsampled]
+  infectees <- infectees[!unsampled]
+  
+  numCasesToPick <- ifelse(numCasesToPick>length(infectors),length(infectors),numCasesToPick) 
+  
+  numToUse <- sample(1:length(infectors),numCasesToPick)
+  
+  infectors <- infectors[numToUse]
+  infectees <- infectees[numToUse]
+  
+  infectTimes <- ttree$ttree[infectees,1]
+  
+  data.frame(case.A = ttree$nam[infectors], case.B = ttree$nam[infectees], start = infectTimes-runif(length(infectors), min = min, max = max),
+                     end = infectTimes+runif(length(infectors), min = min, max = max)) # epi end time should be after last infection
+}
+
+
+
+
+

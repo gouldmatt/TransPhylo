@@ -4,16 +4,33 @@
 \alias{plotCTree}
 \title{Plot both phylogenetic and transmission trees using colors on the phylogeny}
 \usage{
-plotCTree(tree, showLabels = TRUE, cols = NA, maxTime = NA)
+plotCTree(
+  tree,
+  maxTime = NA,
+  showLabels = TRUE,
+  alignLabels = FALSE,
+  colUnsam = FALSE,
+  trCol = "black",
+  trShape = 20,
+  cex = 1
+)
 }
 \arguments{
 \item{tree}{Combined phylogenetic/transmission tree}
 
+\item{maxTime}{Maximum time to show on the x axis}
+
 \item{showLabels}{Whether or not to show the labels}
 
-\item{cols}{Colors to use for hosts}
+\item{alignLabels}{Whether to align the labels of the tree using dotted lines from the tips}
 
-\item{maxTime}{Maximum time to show on the x axis}
+\item{colUnsam}{Give the unsampled cases colors (TRUE), or have all unsampled cases be grey (FALSE)}
+
+\item{trCol}{The color for the symbol annotating transmission events on the tree}
+
+\item{trShape}{Integer code of the plotting symbol for annotating transmission events on the tree}
+
+\item{cex}{Numeric character expansion factor for the tip labels}
 }
 \description{
 Plot both phylogenetic and transmission trees using colors on the phylogeny

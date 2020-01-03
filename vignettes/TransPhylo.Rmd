@@ -50,7 +50,7 @@ simu <- simulateOutbreak(neg=neg,pi=pi,off.r=off.r,w.shape=w.shape,
                          w.scale=w.scale,dateStartOutbreak=2005,dateT=2008)
 ```
 
-This simulation contains both the transmission tree between infected hosts and the within-host phylogenetic tree of each host. This can be visualised as a colored phlogenetic tree, where each host is represented by a unique color:
+This simulation contains both the transmission tree between infected hosts and the within-host phylogenetic tree of each host. This can be visualized as a colored phlogenetic tree, where each host is represented by a unique color:
 
 ```{r}
 plotCTree(simu)

@@ -4,9 +4,19 @@
 \alias{simulateOutbreak}
 \title{Simulate an outbreak}
 \usage{
-simulateOutbreak(off.r = 1, off.p = 0.5, neg = 0.25, nSampled = NA,
-  pi = 0.5, w.shape = 2, w.scale = 1, ws.shape = w.shape,
-  ws.scale = w.scale, dateStartOutbreak = 2000, dateT = Inf)
+simulateOutbreak(
+  off.r = 1,
+  off.p = 0.5,
+  neg = 0.25,
+  nSampled = NA,
+  pi = 0.5,
+  w.shape = 2,
+  w.scale = 1,
+  ws.shape = w.shape,
+  ws.scale = w.scale,
+  dateStartOutbreak = 2000,
+  dateT = Inf
+)
 }
 \arguments{
 \item{off.r}{First parameter of the negative binomial distribution for offspring number}

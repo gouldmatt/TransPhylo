@@ -4,8 +4,7 @@
 \alias{getIncidentCases}
 \title{Returns and/or plot numbers of sampled and unsampled cases over time}
 \usage{
-getIncidentCases(record, burnin = 0.5, numBins = 10,
-  show.plot = FALSE)
+getIncidentCases(record, burnin = 0.5, numBins = 10, show.plot = FALSE)
 }
 \arguments{
 \item{record}{Output from inferTTree function}

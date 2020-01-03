@@ -4,12 +4,34 @@
 \alias{inferTTree}
 \title{Infer transmission tree given a phylogenetic tree}
 \usage{
-inferTTree(ptree, w.shape = 2, w.scale = 1, ws.shape = w.shape,
-  ws.scale = w.scale, mcmcIterations = 1000, thinning = 1,
-  startNeg = 100/365, startOff.r = 1, startOff.p = 0.5,
-  startPi = 0.5, updateNeg = TRUE, updateOff.r = TRUE,
-  updateOff.p = FALSE, updatePi = TRUE, startCTree = NA,
-  updateTTree = TRUE, optiStart = TRUE, dateT = Inf)
+inferTTree(
+  ptree,
+  w.shape = 2,
+  w.scale = 1,
+  ws.shape = w.shape,
+  ws.scale = w.scale,
+  w.mu,
+  w.sigma,
+  ws.mu,
+  ws.sigma,
+  mcmcIterations = 1000,
+  thinning = 1,
+  startNeg = 100/365,
+  startOff.r = 1,
+  startOff.p = 0.5,
+  startPi = 0.5,
+  updateNeg = TRUE,
+  updateOff.r = TRUE,
+  updateOff.p = FALSE,
+  updatePi = TRUE,
+  startCTree = NA,
+  updateTTree = TRUE,
+  optiStart = TRUE,
+  dateT = Inf,
+  epiData,
+  penalize = TRUE,
+  trackPenalty = FALSE
+)
 }
 \arguments{
 \item{ptree}{Phylogenetic tree}
@@ -21,6 +43,14 @@ inferTTree(ptree, w.shape = 2, w.scale = 1, ws.shape = w.shape,
 \item{ws.shape}{Shape parameter of the Gamma probability density function representing the sampling time}
 
 \item{ws.scale}{Scale parameter of the Gamma probability density function representing the sampling time}
+
+\item{w.mu}{Mean of the Gamma probability density function representing the generation time, used with w.sigma to replace the shape and scale parameters}
+
+\item{w.sigma}{Standard deviation of the Gamma probability density function representing the generation time}
+
+\item{ws.mu}{Mean of the Gamma probability density function representing the sampling time, used with ws.sigma to replace the shape and scale parameters}
+
+\item{ws.sigma}{Standard deviation of the Gamma probability density function representing the sampling time}
 
 \item{mcmcIterations}{Number of MCMC iterations to run the algorithm for}
 
@@ -49,6 +79,8 @@ inferTTree(ptree, w.shape = 2, w.scale = 1, ws.shape = w.shape,
 \item{optiStart}{Whether or not to optimise the MCMC start point}
 
 \item{dateT}{Date when process stops (this can be Inf for fully simulated outbreaks)}
+
+\item{R0}{Starting value of R0, one of startOff.r or startOff.p must also be specified}
 }
 \value{
 posterior sample set of transmission trees

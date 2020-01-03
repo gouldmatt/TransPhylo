@@ -4,8 +4,17 @@
 \alias{makeTTree}
 \title{Simulate a transmission tree}
 \usage{
-makeTTree(off.r, off.p, pi, w.shape, w.scale, ws.shape, ws.scale, maxTime,
-  nSampled)
+makeTTree(
+  off.r,
+  off.p,
+  pi,
+  w.shape,
+  w.scale,
+  ws.shape,
+  ws.scale,
+  maxTime,
+  nSampled
+)
 }
 \arguments{
 \item{off.r}{First parameter of the negative binomial distribution for offspring number}
