@@ -58,3 +58,12 @@ recordCaseExtract <- function(record,case,burnin=0.5){
   return(caseInfo)
   
 }
+
+numInter <- function(hostA,hostB,ttree){
+  count=0
+  while (hostA!=hostB) {
+    if (ttree[hostA,1]>ttree[hostB,1]) hostA=ttree[hostA,3] else hostB=ttree[hostB,3]
+    count=count+1
+  }
+  return(count)
+}

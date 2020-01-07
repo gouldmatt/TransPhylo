@@ -80,6 +80,25 @@ inferTTree(
 
 \item{dateT}{Date when process stops (this can be Inf for fully simulated outbreaks)}
 
+\item{epiData}{A named list of two data.frames: \cr \cr 
+\strong{case.info} with row.names matching the case names and columns: 
+\describe{
+  \item{\dQuote{start}}{the start of the probable exposure for this case}
+  \item{\dQuote{end}}{the end of the probable exposure for this case}
+  \item{\dQuote{location}}{a string name of the location for this case}
+} 
+\strong{contact.info} with columns: 
+\describe{
+  \item{\dQuote{case.A}}{the name of the first case in this probable transmission pair}
+  \item{\dQuote{case.B}}{the name of the second case in this probable transmission pair}
+  \item{\dQuote{start}}{the start of the probable contact for the pair of cases}
+  \item{\dQuote{end}}{the end of the probable contact for the pair of cases}
+}}
+
+\item{penalize}{hether to penalize transmission trees probability based on the \strong{epiData}}
+
+\item{trackPenalty}{whether to save information about the penalty amounts as well as what part of the tree caused the penalty}
+
 \item{R0}{Starting value of R0, one of startOff.r or startOff.p must also be specified}
 }
 \value{
