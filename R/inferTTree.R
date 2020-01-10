@@ -37,12 +37,12 @@
 #'   \item{\dQuote{start}}{the start of the probable contact for the pair of cases}
 #'   \item{\dQuote{end}}{the end of the probable contact for the pair of cases}
 #' }  
-#' @param penalize hether to penalize transmission trees probability based on the \strong{epiData}
+#' @param penalize whether to penalize transmission trees probability based on the \strong{epiData}
 #' @param trackPenalty whether to save information about the penalty amounts as well as what part of the tree caused the penalty
 #' @return posterior sample set of transmission trees
 #' @export
 inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.scale, w.mu, w.sigma, ws.mu, ws.sigma, mcmcIterations=1000,
-                      thinning=1, startNeg=100/365, startOff.r=1, startOff.p=0.5, startPi=0.5, updateNeg=TRUE,
+                      thinning=1, startNeg=100/365, R0, startOff.r=1, startOff.p=0.5, startPi=0.5, updateNeg=TRUE,
                       updateOff.r=TRUE, updateOff.p=FALSE, updatePi=TRUE, startCTree=NA, updateTTree=TRUE,
                       optiStart=TRUE, dateT = Inf, epiData, penalize = TRUE, trackPenalty = FALSE){
 #  memoise::forget(getOmegabar)
@@ -100,6 +100,15 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
   record <- vector('list',mcmcIterations/thinning)
   pTTree <- probTTree(ttree$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
   pPTree <- probPTreeGivenTTree(ctree,neg) 
+  
+  if(is.infinite(pTTree)){
+    stop("pTTree is infinite, stopping inference")
+  } 
+  
+  if(is.infinite(pPTree)){
+    stop("pPTree is infinite, stopping inference")
+  } 
+  
   pb <- utils::txtProgressBar(min=0,max=mcmcIterations,style = 3)
   for (i in 1:mcmcIterations) {#Main MCMC loop
     if (i%%thinning == 0) {
@@ -122,7 +131,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       record[[i/thinning]]$acc.rate.updateOff.p <- acceptNumP/i
       record[[i/thinning]]$acc.rate.updateOff.pi <- acceptNumPi/i
       record[[i/thinning]]$acc.rate.ttree <- acceptNumTTree/i
-      record[[i/thinning]]$posterior <- pTTree+pPTree-logPen
+      record[[i/thinning]]$posterior <- pTTree+pPTree
       if(trackPenalty){
         record[[i/thinning]]$penalty.exposure <- unname(penalty[1])
         record[[i/thinning]]$penalty.contact <- unname(penalty[2])
@@ -143,6 +152,11 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
     }
     logPen <- ifelse(penalize,log(1+sum(penalty)),0)
     
+    if (is.na(logPen)){
+      message("penalty is NA, stopping inference and returning record")
+      return(record)
+    } 
+    
     if (updateTTree) {
       #Metropolis update for transmission tree 
       prop <- proposal(ctree$ctree) 
@@ -150,6 +164,17 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       ttree2 <- extractTTree(ctree2)
       pTTree2 <- probTTree(ttree2$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
       pPTree2 <- probPTreeGivenTTree(ctree2,neg) 
+      
+      if(is.infinite(pTTree2)){
+        message("pTTree2 is infinite in Metropolis update for transmission tree, stopping inference and returning record")
+        return(record)
+      } 
+      
+      if(is.infinite(pPTree2)){
+        message("pPTree2 is infinite in Metropolis update for transmission tree, stopping inference and returning record")
+        return(record)
+      } 
+      
       if (log(runif(1)) < log(prop$qr)+pTTree2 + pPTree2-pTTree-pPTree){ 
         acceptNumTTree <- acceptNumTTree + 1 
         ctree <- ctree2 
@@ -163,6 +188,12 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       #Metropolis update for Ne*g, assuming Exp(1) prior 
       neg2 <- abs(neg + (runif(1)-0.5)*0.5)
       pPTree2 <- probPTreeGivenTTree(ctree,neg2) 
+      
+      if(is.infinite(pPTree2)){
+        message("pPTree2 is infinite in Metropolis update for Ne*g, stopping inference and returning record")
+        return(record)
+      }
+      
       if (log(runif(1)) < pPTree2-pPTree-neg2+neg){
           acceptNumNeg <- acceptNumNeg + 1  
           neg <- neg2
@@ -175,6 +206,12 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       #Metropolis update for off.r, assuming Exp(1) prior 
       off.r2 <- abs(off.r + (runif(1)-0.5)*0.5)
       pTTree2 <- probTTree(ttree$ttree,off.r2,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      
+      if(is.infinite(pTTree2)){
+        message("pTTree2 is infinite in Metropolis update for off.r, stopping inference and returning record")
+        return(record)
+      } 
+      
       if (log(runif(1)) < pTTree2-pTTree-off.r2+off.r)  {
         acceptNumR <- acceptNumR + 1 
         off.r <- off.r2
@@ -187,6 +224,12 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       off.p2 <- abs(off.p + (runif(1)-0.5)*0.1)
       if (off.p2>1) off.p2=2-off.p2
       pTTree2 <- probTTree(ttree$ttree,off.r,off.p2,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      
+      if(is.infinite(pTTree2)){
+        message("pTTree2 is infinite in Metropolis update for off.p, stopping inference and returning record")
+        return(record)
+      } 
+      
       if (log(runif(1)) < pTTree2-pTTree)  {
         acceptNumP <- acceptNumP + 1 
         off.p <- off.p2
@@ -200,6 +243,12 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       if (pi2<0.01) pi2=0.02-pi2
       if (pi2>1) pi2=2-pi2
       pTTree2 <- probTTree(ttree$ttree,off.r,off.p,pi2,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      
+      if(is.infinite(pTTree2)){
+        message("pTTree2 is infinite in Metropolis update for pi, stopping inference and returning record")
+        return(record)
+      } 
+      
       if (log(runif(1)) < pTTree2-pTTree) {
         acceptNumPi <- acceptNumPi + 1 
         pi <- pi2

@@ -68,7 +68,7 @@ locationPen <- function(ttree, epiData, penaltyInfo = FALSE){
       transToPen <- ifelse(is.na(locationInfectee != locationInfectors), FALSE, locationInfectee != locationInfectors)
       pen <- sum(transToPen)
       
-      if(penaltyInfo){
+      if(penaltyInfo && any(transToPen)){
         wiw <- matrix(wiw, ncol = 2)
         rowsInfectees <- wiw[transToPen,2]
         rowsInfectors <- wiw[transToPen,1]
@@ -149,7 +149,7 @@ contactPen <- function(ttree, epiData, penaltyInfo = FALSE){
         }
       }
       
-      if(penaltyInfo){
+      if(penaltyInfo && any(presentTrans)){
         penalizedTrans <- !presentTrans | !validTimeTrans
         res <- data.frame(transmission.present = presentTrans[penalizedTrans],
                           case.A = epiData$contact.info$case.A[penalizedTrans],
