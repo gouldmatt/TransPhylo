@@ -17,6 +17,7 @@ inferTTree(
   mcmcIterations = 1000,
   thinning = 1,
   startNeg = 100/365,
+  R0,
   startOff.r = 1,
   startOff.p = 0.5,
   startPi = 0.5,
@@ -58,6 +59,8 @@ inferTTree(
 
 \item{startNeg}{Starting value of within-host coalescent parameter Ne*g}
 
+\item{R0}{Starting value of R0, one of startOff.r or startOff.p must also be specified}
+
 \item{startOff.r}{Starting value of parameter off.r}
 
 \item{startOff.p}{Starting value of parameter off.p}
@@ -80,26 +83,24 @@ inferTTree(
 
 \item{dateT}{Date when process stops (this can be Inf for fully simulated outbreaks)}
 
-\item{epiData}{A named list of two data.frames: \cr \cr 
-\strong{case.info} with row.names matching the case names and columns: 
+\item{epiData}{A list containing any of the following named elements: \cr \cr 
+\strong{exposure} a data.frame with row.names matching the case names and columns: 
 \describe{
-  \item{\dQuote{start}}{the start of the probable exposure for this case}
-  \item{\dQuote{end}}{the end of the probable exposure for this case}
-  \item{\dQuote{location}}{a string name of the location for this case}
+  \item{\dQuote{start}}{the start time of the probable exposure for this case}
+  \item{\dQuote{end}}{the end time of the probable exposure for this case}
 } 
-\strong{contact.info} with columns: 
+\strong{contact} a data.frame with columns: 
 \describe{
   \item{\dQuote{case.A}}{the name of the first case in this probable transmission pair}
   \item{\dQuote{case.B}}{the name of the second case in this probable transmission pair}
-  \item{\dQuote{start}}{the start of the probable contact for the pair of cases}
-  \item{\dQuote{end}}{the end of the probable contact for the pair of cases}
-}}
+  \item{\dQuote{start}}{the start of the probable contact time for the pair of cases}
+  \item{\dQuote{end}}{the end of the probable contact time for the pair of cases}
+}  
+\strong{location} a named list of character vectors with vector names matching the case names and each vector listing the locations of that case  \cr}
 
-\item{penalize}{hether to penalize transmission trees probability based on the \strong{epiData}}
+\item{penalize}{whether to penalize transmission trees probability based on the \strong{epiData}}
 
-\item{trackPenalty}{whether to save information about the penalty amounts as well as what part of the tree caused the penalty}
-
-\item{R0}{Starting value of R0, one of startOff.r or startOff.p must also be specified}
+\item{trackPenalty}{whether to save information about the penalty amounts as well as what part of the tree caused each penalty}
 }
 \value{
 posterior sample set of transmission trees

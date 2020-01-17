@@ -10,7 +10,9 @@ netExtractRecord(
   colorMethod = c("all", "sampled", "time"),
   baseTree = c("maxPosterior", "consensus"),
   minimum = 0.2,
-  wex = 1
+  wex = 1,
+  indexShape = c("square", "triangle", "box", "circle", "dot", "star", "ellipse",
+    "database", "text", "diamond")
 )
 }
 \arguments{
@@ -34,6 +36,8 @@ netExtractRecord(
 \item{minimum}{Minimum probability for inclusion of a partition in the consensus, ignored if not using the consensus \strong{baseTree}}
 
 \item{wex}{A weight expansion factor to multiply the edge weights by}
+
+\item{indexShape}{shape for the index case}
 }
 \value{
 a list of two lists one with the node list and one with the edge list

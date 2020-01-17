@@ -23,22 +23,9 @@
 #' @param updateTTree Whether or not to update the transmission tree
 #' @param optiStart Whether or not to optimise the MCMC start point
 #' @param dateT Date when process stops (this can be Inf for fully simulated outbreaks)
-#' @param epiData A named list of two data.frames: \cr \cr 
-#' \strong{case.info} with row.names matching the case names and columns: 
-#' \describe{
-#'   \item{\dQuote{start}}{the start of the probable exposure for this case}
-#'   \item{\dQuote{end}}{the end of the probable exposure for this case}
-#'   \item{\dQuote{location}}{a string name of the location for this case}
-#' } 
-#' \strong{contact.info} with columns: 
-#' \describe{
-#'   \item{\dQuote{case.A}}{the name of the first case in this probable transmission pair}
-#'   \item{\dQuote{case.B}}{the name of the second case in this probable transmission pair}
-#'   \item{\dQuote{start}}{the start of the probable contact for the pair of cases}
-#'   \item{\dQuote{end}}{the end of the probable contact for the pair of cases}
-#' }  
 #' @param penalize whether to penalize transmission trees probability based on the \strong{epiData}
-#' @param trackPenalty whether to save information about the penalty amounts as well as what part of the tree caused the penalty
+#' @param trackPenalty whether to save information about the penalty amounts as well as what part of the tree caused each penalty
+#' @inheritParams epiPenTTree
 #' @return posterior sample set of transmission trees
 #' @export
 inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.scale, w.mu, w.sigma, ws.mu, ws.sigma, mcmcIterations=1000,
@@ -90,7 +77,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
   
   if(trackPenalty){
     penalty <- epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty)
-    penaltyInfo <- penalty[2] 
+    penalty.info <- penalty[2] 
     penalty <- unlist(penalty[1])
   } else if(penalize) {
     penalty <- unlist(epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty))
@@ -136,7 +123,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
         record[[i/thinning]]$penalty.exposure <- unname(penalty[1])
         record[[i/thinning]]$penalty.contact <- unname(penalty[2])
         record[[i/thinning]]$penalty.location <- unname(penalty[3])
-        record[[i/thinning]]$penalty.information <- penaltyInfo
+        record[[i/thinning]] <- c(record[[i/thinning]],penalty.info)
       }
       record[[i/thinning]]$source <- ctree$ctree[ctree$ctree[which(ctree$ctree[,4]==0),2],4]
       if (record[[i/thinning]]$source<=length(ctree$nam)) record[[i/thinning]]$source=ctree$nam[record[[i/thinning]]$source] else record[[i/thinning]]$source='Unsampled'
@@ -145,7 +132,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
     # update the penality for the current transmission tree 
     if(trackPenalty){
       penalty <- epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty)
-      penaltyInfo <- penalty[2] 
+      penalty.info <- penalty[2] 
       penalty <- unlist(penalty[1])
     } else if(penalize) {
       penalty <- unlist(epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty))

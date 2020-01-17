@@ -9,20 +9,20 @@ epiPenTTree(ttree, epiData, penaltyInfo = FALSE)
 \arguments{
 \item{ttree}{Transmission tree}
 
-\item{epiData}{A named list of two data.frames: \cr \cr 
-\strong{case.info} with row.names matching the case names and columns: 
+\item{epiData}{A list containing any of the following named elements: \cr \cr 
+\strong{exposure} a data.frame with row.names matching the case names and columns: 
 \describe{
-  \item{\dQuote{start}}{the start of the probable exposure for this case}
-  \item{\dQuote{end}}{the end of the probable exposure for this case}
-  \item{\dQuote{location}}{a string name of the location for this case}
+  \item{\dQuote{start}}{the start time of the probable exposure for this case}
+  \item{\dQuote{end}}{the end time of the probable exposure for this case}
 } 
-\strong{contact.info} with columns: 
+\strong{contact} a data.frame with columns: 
 \describe{
   \item{\dQuote{case.A}}{the name of the first case in this probable transmission pair}
   \item{\dQuote{case.B}}{the name of the second case in this probable transmission pair}
-  \item{\dQuote{start}}{the start of the probable contact for the pair of cases}
-  \item{\dQuote{end}}{the end of the probable contact for the pair of cases}
-}}
+  \item{\dQuote{start}}{the start of the probable contact time for the pair of cases}
+  \item{\dQuote{end}}{the end of the probable contact time for the pair of cases}
+}  
+\strong{location} a named list of character vectors with vector names matching the case names and each vector listing the locations of that case  \cr}
 
 \item{penaltyInfo}{Whether or not to return information about which penalties are broken for the given transmission tree}
 }

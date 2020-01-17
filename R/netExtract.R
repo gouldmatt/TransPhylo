@@ -7,11 +7,16 @@
 #'   \item{\dQuote{sampled}}{give the sampled cases a unique color and color the unsampled cases grey}
 #'   \item{\dQuote{time}}{give each case a color based on the time of infection}
 #' }
+#' @param indexShape shape for the index case 
 #' @return a list of two lists one with the node list and one with the edge list 
 #' @author Matthew Gould 
 #' @note The format of the node and edge list is ready to be used with the \strong{visnetwork} package
 #' @export
-netExtractTtree <- function(ttree, colorMethod = c("all","sampled","time")){
+netExtractTTree <- function(ttree, colorMethod = c("all","sampled","time"), indexShape = c("square", "triangle", "dot", "star",
+                                                                                                   "ellipse", "diamond")){
+  if(!missing(indexShape) & length(indexShape)>1) stop("only one 'indexShape' allowed")
+  indexShape <- match.arg(indexShape)
+  
   if(!missing(colorMethod) & length(colorMethod)>1) stop("only one 'colorMethod' allowed")
   colorMethod <- match.arg(colorMethod)
   
@@ -45,7 +50,7 @@ netExtractTtree <- function(ttree, colorMethod = c("all","sampled","time")){
     cols <- ifelse(hostNames != "unsampled",cols,"grey")
   }
   
-  nodes <- data.frame(id = 1:numHosts, color = cols, label = hostNames, title = tree[,1], sampledTime = tree[,2], group = samOrUnsam, stringsAsFactors = F) 
+  nodes <- data.frame(id = 1:numHosts, color = cols, label = hostNames, title = tree[,1], sampledTime = tree[,2], group = samOrUnsam, stringsAsFactors = F, shape = ifelse(indexInf,indexShape,"dot"), size = 25) 
   
   list("nodes" = nodes, "edges" = edges)
 } 
@@ -65,15 +70,20 @@ netExtractTtree <- function(ttree, colorMethod = c("all","sampled","time")){
 #'   \item{\dQuote{maxPosterior}}{the transmission tree with the highest posterior probability}
 #'   \item{\dQuote{consensus}}{the consensus transmission tree}
 #' }
+#' @inheritParams netExtractTTree
 #' @param minimum Minimum probability for inclusion of a partition in the consensus, ignored if not using the consensus \strong{baseTree}
 #' @param wex A weight expansion factor to multiply the edge weights by 
 #' @return a list of two lists one with the node list and one with the edge list 
 #' @author Matthew Gould 
 #' @note The format of the node and edge list is ready to be used with the \strong{visnetwork} package
 #' @export
-netExtractRecord <- function(record, burnin = 0, colorMethod = c("all","sampled","time"), baseTree = c("maxPosterior","consensus"), minimum = 0.2, wex = 1) {
+netExtractRecord <- function(record, burnin = 0, colorMethod = c("all","sampled","time"), baseTree = c("maxPosterior","consensus"), minimum = 0.2, wex = 1, indexShape = c("square", "triangle", "box", "circle", "dot", "star",
+                                                                                                                                                                           "ellipse", "database", "text", "diamond")) {
   if(!missing(baseTree) & length(baseTree)>1) stop("only one 'baseTree' allowed")
   baseTree <- match.arg(baseTree)
+  
+  if(!missing(indexShape) & length(indexShape)>1) stop("only one 'indexShape' allowed")
+  indexShape <- match.arg(indexShape)
   
   if(!missing(colorMethod) & length(colorMethod)>1) stop("only one 'colorMethod' allowed")
   colorMethod <- match.arg(colorMethod)
@@ -86,10 +96,10 @@ netExtractRecord <- function(record, burnin = 0, colorMethod = c("all","sampled"
   # extract network data from correct base tree 
   if(baseTree == "maxPosterior"){
     ttree <- extractTTree(record[[which.max(ps)]]$ctree)
-    netData = netExtractTtree(ttree, colorMethod = colorMethod)
+    netData = netExtractTTree(ttree, colorMethod = colorMethod, indexShape = indexShape)
   } else if(baseTree == "consensus"){
     ttree <- consTTree(record, burnin = 0, minimum = minimum)
-    netData = netExtractTtree(ttree, colorMethod = colorMethod)
+    netData = netExtractTTree(ttree, colorMethod = colorMethod, indexShape = indexShape)
   }
   
   numCases <- length(ttree$nam)
