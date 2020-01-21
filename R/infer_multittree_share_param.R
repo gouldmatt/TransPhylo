@@ -24,6 +24,9 @@
 #' @param updateTTree Whether or not to update the transmission tree
 #' @param optiStart Whether or not to optimise the MCMC start point
 #' @param dateT Date when process stops (this can be Inf for fully simulated outbreaks)
+#' @param epiData_lst List of epidemiological data for each tree, see \strong{epiPenTTree} for the format 
+#' @param penalize whether to penalize transmission trees probability based on the \strong{epiData_lst}
+#' @param trackPenalty whether to save information about the penalty amounts as well as what part of the tree caused each penalty
 #' @return list the same size as input, each element contains posterior transmission trees inferred from
 #' corresponding phylogenetic tree
 #' @author Yuanwei Xu
@@ -129,7 +132,6 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
   
   one_update_share <- function(ctree_lst, pTTree_lst, pPTree_lst, neg_lst, off.r_lst, off.p_lst, pi_lst, share, epiData_lst, penalize, trackPenalty){
     ttree_lst <- purrr::map(ctree_lst, extractTTree)
-    ttree_lst <- purrr::map(ttree_lst, "ttree") # list of ttree matrices
     
     if(trackPenalty){
       penalty_lst <- purrr::map(ttree_lst, function(t){
@@ -147,6 +149,8 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
       }) 
     }
     logPen <- ifelse(penalize,log(1+sum(penalty)),0)
+    
+    ttree_lst <- purrr::map(ttree_lst, "ttree") # list of ttree matrices
     
     if(("neg" %in% share) && updateNeg){
       neg <- neg_lst[[1]]
@@ -268,11 +272,12 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
         record[[k]][[i/thinning]]$w.scale <- w.scale
         record[[k]][[i/thinning]]$ws.shape <- ws.shape
         record[[k]][[i/thinning]]$ws.scale <- ws.scale
+        record[[k]][[i/thinning]]$posterior <- state_new[[k]]$pTTree + state_new[[k]]$pPTree 
         if(trackPenalty){
           record[[k]][[i/thinning]]$penalty.exposure <- unname(state_new[[k]]$penalty[1])
           record[[k]][[i/thinning]]$penalty.contact <- unname(state_new[[k]]$penalty[2])
           record[[k]][[i/thinning]]$penalty.location <- unname(state_new[[k]]$penalty[3])
-          record[[k]][[i/thinning]]$penalty.information <- state_new[[k]]$penaltyInfo
+          record[[k]][[i/thinning]]$penalty.info <- state_new[[k]]$penaltyInfo
         }
         record[[k]][[i/thinning]]$source <- with(state_new[[k]]$ctree, ctree[ctree[which(ctree[,4]==0),2],4])
         if (record[[k]][[i/thinning]]$source<=length(state_new[[k]]$ctree$nam)) 

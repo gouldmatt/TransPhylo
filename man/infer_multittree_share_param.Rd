@@ -79,6 +79,12 @@ share the offspring distribution. Allowed parameter names are "neg", "off.r", "o
 \item{optiStart}{Whether or not to optimise the MCMC start point}
 
 \item{dateT}{Date when process stops (this can be Inf for fully simulated outbreaks)}
+
+\item{epiData_lst}{List of epidemiological data for each tree, see \strong{epiPenTTree} for the format}
+
+\item{penalize}{whether to penalize transmission trees probability based on the \strong{epiData_lst}}
+
+\item{trackPenalty}{whether to save information about the penalty amounts as well as what part of the tree caused each penalty}
 }
 \value{
 list the same size as input, each element contains posterior transmission trees inferred from
