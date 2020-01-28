@@ -4,7 +4,14 @@
 \alias{epiPenTTree}
 \title{Penalize a transmission tree based on epidemiological data}
 \usage{
-epiPenTTree(ttree, epiData, penaltyInfo = FALSE)
+epiPenTTree(
+  ttree,
+  epiData,
+  penaltyInfo = FALSE,
+  exposureP = 1,
+  contactP = 1,
+  locationP = 1
+)
 }
 \arguments{
 \item{ttree}{Transmission tree}
@@ -25,9 +32,11 @@ epiPenTTree(ttree, epiData, penaltyInfo = FALSE)
 \strong{location} a named list of character vectors with vector names matching the case names and each vector listing the locations of that case  \cr}
 
 \item{penaltyInfo}{Whether or not to return information about which penalties are broken for the given transmission tree}
+
+\item{exposureP, contactP, locationP}{numeric amounts for a single penalty in each area of the epidemiological data}
 }
 \value{
-Either a list of the numeric penalties or a list of the numeric penalties and data.frame of information about which events 
+Either a vector of the numeric penalties or a list of the numeric penalties and a data.frame of information about which events 
 caused the penalties
 }
 \description{

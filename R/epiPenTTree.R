@@ -15,28 +15,34 @@
 #' }  
 #' \strong{location} a named list of character vectors with vector names matching the case names and each vector listing the locations of that case  \cr  
 #' @param penaltyInfo Whether or not to return information about which penalties are broken for the given transmission tree 
-#' @return Either a list of the numeric penalties or a list of the numeric penalties and data.frame of information about which events 
+#' @param exposureP,contactP,locationP numeric amounts for a single penalty in each area of the epidemiological data
+#' @return Either a vector of the numeric penalties or a list of the numeric penalties and a data.frame of information about which events 
 #' caused the penalties
 #' @author Matthew Gould
 #' @export
-epiPenTTree = function(ttree, epiData, penaltyInfo = FALSE){
+epiPenTTree = function(ttree, epiData, penaltyInfo = FALSE, exposureP = 1, contactP = 1, locationP = 1){
   
   # check input format of the epiData 
   if(!all(names(epiData) %in% c("exposure","contact","location"))){
     stop("Epi data must be named list see ?epiPenTTree for format")
   } 
   
+  penWeights <- c(exposureP,contactP,locationP)
+  
   penalty <- list("exposurePen" = exposurePen(ttree, epiData, penaltyInfo = penaltyInfo),
                   "contactPen" = contactPen(ttree, epiData, penaltyInfo = penaltyInfo), 
                   "locationPen" = locationPen(ttree, epiData, penaltyInfo = penaltyInfo)) 
   if(!penaltyInfo){
-    return(penalty) 
+    res <- sapply(1:3, function(i) penalty[[i]]*penWeights[i])
+    names(res) <- names(penalty)
+    return(res) 
   } else {
-    return(list("penalties" = sapply(penalty, function(i){
-      if(is.null(nrow(i))){
-        i
+    return(list("penalties" = sapply(1:3, function(i){
+      penRes <- penalty[[i]]
+      if(is.null(nrow(penRes))){
+        penRes
       } else {
-        nrow(i)
+        nrow(penRes)*penWeights[i]
       }
     }), "penalty.info" = penalty)) 
   }
@@ -158,7 +164,7 @@ contactPen <- function(ttree, epiData, penaltyInfo = FALSE){
         }
       }
       
-      if(penaltyInfo && any(presentTrans)){
+      if(penaltyInfo){
         penalizedTrans <- !presentTrans | !validTimeTrans
         res <- data.frame(transmission.present = presentTrans[penalizedTrans],
                           case.A = epiData$contact$case.A[penalizedTrans],

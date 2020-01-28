@@ -21,7 +21,7 @@ test_that("test correct simulated exposure", {
   expect_equal(sum( epiPenTTree(extractTTree(simu), epiData, penaltyInfo = T)$penalties),0)
   
   # should be no pen 
-  expect_equal(sum( epiPenTTree(extractTTree(simu), epiData, penaltyInfo = F)$penalties),0)
+  expect_equal(sum( epiPenTTree(extractTTree(simu), epiData, penaltyInfo = F)),0)
 })
 
 test_that("test correct simulated contact", {

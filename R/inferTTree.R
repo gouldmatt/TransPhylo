@@ -31,7 +31,7 @@
 inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.scale, w.mu, w.sigma, ws.mu, ws.sigma, mcmcIterations=1000,
                       thinning=1, startNeg=100/365, R0, startOff.r=1, startOff.p=0.5, startPi=0.5, updateNeg=TRUE,
                       updateOff.r=TRUE, updateOff.p=FALSE, updatePi=TRUE, startCTree=NA, updateTTree=TRUE,
-                      optiStart=TRUE, dateT = Inf, epiData, penalize = TRUE, trackPenalty = FALSE){
+                      optiStart=TRUE, dateT = Inf, epiData, penalize = TRUE, trackPenalty = FALSE, exposureP = 1, contactP = 1, locationP = 1){
 #  memoise::forget(getOmegabar)
 #  memoise::forget(probSubtree)
   ptree$ptree[,1]=ptree$ptree[,1]+runif(nrow(ptree$ptree))*1e-10#Ensure that all leaves have unique times
@@ -76,11 +76,11 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
   trackPenalty <- !missing(epiData) && trackPenalty
   
   if(trackPenalty){
-    penalty <- epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty)
+    penalty <- epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty, exposureP = exposureP, contactP = contactP, locationP = locationP)
     penalty.info <- penalty[2] 
     penalty <- unlist(penalty[1])
   } else if(penalize) {
-    penalty <- unlist(epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty))
+    penalty <- unlist(epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty, exposureP = exposureP, contactP = contactP, locationP = locationP))
   }
   logPen <- ifelse(penalize,log(1+sum(penalty)),0)
   
@@ -131,11 +131,11 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
     
     # update the penality for the current transmission tree 
     if(trackPenalty){
-      penalty <- epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty)
+      penalty <- epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty, exposureP = exposureP, contactP = contactP, locationP = locationP)
       penalty.info <- penalty[2] 
       penalty <- unlist(penalty[1])
     } else if(penalize) {
-      penalty <- unlist(epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty))
+      penalty <- unlist(epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty, exposureP = exposureP, contactP = contactP, locationP = locationP))
     }
     logPen <- ifelse(penalize,log(1+sum(penalty)),0)
     
