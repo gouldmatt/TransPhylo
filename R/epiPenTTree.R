@@ -22,9 +22,35 @@
 #' @export
 epiPenTTree = function(ttree, epiData, penaltyInfo = FALSE, exposureP = 1, contactP = 1, locationP = 1){
   
-  # check input format of the epiData 
+  # check input format of the epiData
+  if(!is(epiData,"list")){
+    stop("epiData must be a list, see ?epiPenTTree for format")
+  }
+  
+  if(is.null(epiData$contact) && is.null(epiData$exposure) && is.null(epiData$location)){
+    stop("epiData missing or incorrect format, see ?epiPenTTree for format")
+  }
+  
+  if(!is.null(epiData$contact)){
+    if(!is(epiData$contact,"data.frame")){
+      stop("contact information must be a data.frame, see ?epiPenTTree for format")
+    }
+  }
+  
+  if(!is.null(epiData$exposure)){
+    if(!is(epiData$exposure,"data.frame")){
+      stop("exposure information must be a data.frame, see ?epiPenTTree for format")
+    }
+  }
+    
+  if(!is.null(epiData$location)){
+    if(!is(epiData$location,"list")){
+      stop("location information must be a list, see ?epiPenTTree for format")
+    }
+  }
+  
   if(!all(names(epiData) %in% c("exposure","contact","location"))){
-    stop("Epi data must be named list see ?epiPenTTree for format")
+    stop("names in epiData not valid, see ?epiPenTTree for format")
   } 
   
   penWeights <- c(exposureP,contactP,locationP)

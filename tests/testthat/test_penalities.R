@@ -67,7 +67,7 @@ test_that("test correct location penalty", {
   
   nsam <- length(simu$nam)
   
-  location <- as.character(1:nsam)
+  location <- as.list(as.character(1:nsam))
   names(location) <- simu$nam
   
   epiData <- list(location = location)
@@ -152,18 +152,19 @@ test_that("manual checks determined on fixed tree", {
 
 test_that("test with NA values", {
   
-  location <- as.character(1:(length(simu$nam)-5))
-  names(location) <- simu$nam[1:(length(simu$nam)-5)]
+  location <- as.list(as.character(1:(length(simu$nam))))
+  names(location) <- simu$nam[1:(length(simu$nam))]
   
   epiData <- list(exposure = exposure, contact = contact, location = location)
   
-  expect_equal(sum( epiPenTTree(extractTTree(simu), epiData, penaltyInfo = T)$penalties),3)
+  expect_equal(sum(epiPenTTree(extractTTree(simu), epiData, penaltyInfo = T)$penalties),3)
   
   epiData$exposure[1,] <- NA
   epiData$exposure[2,1] <- NA
   epiData$exposure[3,2] <- NA
   
   expect_equal(sum( epiPenTTree(extractTTree(simu), epiData, penaltyInfo = T)$penalties),3)
+  expect_equal(sum(unlist(epiPenTTree(extractTTree(simu), epiData, penaltyInfo = F))),3)
   
   epiData$contact[1,3:4] <- NA
   epiData$contact[2,4] <- NA
@@ -173,4 +174,29 @@ test_that("test with NA values", {
   epiData$exposure <- epiData$exposure + 100
   expect_equal(sum( epiPenTTree(extractTTree(simu), epiData, penaltyInfo = T)$penalties),21)
   
-}) 
+})
+
+test_that("test input format for epiData", {
+  
+  location <- as.list(as.character(1:(length(simu$nam))))
+  names(location) <- simu$nam[1:(length(simu$nam))]
+  
+  epiData <- list(exposure = exposure, contact = contact, location = location)
+  
+  expect_error(epiPenTTree(extractTTree(simu), list(epiData), penaltyInfo = T))
+  
+  epiData$contact <- list(list())
+  
+  expect_error(epiPenTTree(extractTTree(simu), list(epiData), penaltyInfo = T))
+  
+  epiData$contact <- NA 
+  
+  expect_error(epiPenTTree(extractTTree(simu), list(epiData), penaltyInfo = T))
+  
+  epiData$exposure <- NA 
+  epiData$contact <- NA 
+  epiData$location <- NA 
+  
+  expect_error(epiPenTTree(extractTTree(simu), list(epiData), penaltyInfo = T))
+})
+
