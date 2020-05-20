@@ -32,9 +32,7 @@ inferTTree(
   epiData,
   penalize = TRUE,
   trackPenalty = FALSE,
-  exposureP = 1,
-  contactP = 1,
-  locationP = 1
+  prulebreak = 0.8
 )
 }
 \arguments{
@@ -105,11 +103,7 @@ inferTTree(
 
 \item{trackPenalty}{whether to save information about the penalty amounts as well as what part of the tree caused each penalty}
 
-\item{exposureP}{numeric amounts for a single penalty in each area of the epidemiological data}
-
-\item{contactP}{numeric amounts for a single penalty in each area of the epidemiological data}
-
-\item{locationP}{numeric amounts for a single penalty in each area of the epidemiological data}
+\item{prulebreak}{Probability that each penalty for a tree is valid}
 }
 \value{
 posterior sample set of transmission trees

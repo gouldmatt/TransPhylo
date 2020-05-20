@@ -27,6 +27,7 @@
 #' @param epiData_lst List of epidemiological data for each tree, see \strong{epiPenTTree} for the format 
 #' @param penalize whether to penalize transmission trees probability based on the \strong{epiData_lst}
 #' @param trackPenalty whether to save information about the penalty amounts as well as what part of the tree caused each penalty
+#' @param prulebreak Probability that each penalty for a tree is valid  
 #' @return list the same size as input, each element contains posterior transmission trees inferred from
 #' corresponding phylogenetic tree
 #' @author Yuanwei Xu
@@ -35,7 +36,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
                       thinning=1,startNeg=100/365,startOff.r=1,startOff.p=0.5,startPi=0.5,prior_pi_a=5,prior_pi_b=1,
                       updateNeg=TRUE,updateOff.r=TRUE,updateOff.p=FALSE,updatePi=TRUE,
                       share=NULL,
-                      startCTree_lst=rep(NA,length(ptree_lst)),updateTTree=TRUE,optiStart=TRUE,dateT=Inf, epiData_lst, penalize = TRUE, trackPenalty = FALSE) {
+                      startCTree_lst=rep(NA,length(ptree_lst)),updateTTree=TRUE,optiStart=TRUE,dateT=Inf, epiData_lst, penalize = TRUE, trackPenalty = FALSE, prulebreak = 0.8) {
 
   ptree_lst <- purrr::map(ptree_lst, function(x) within(x, ptree[,1] <- ptree[,1]+runif(nrow(ptree))*1e-10))
   #MCMC algorithm
@@ -72,7 +73,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
     } else if(penalize) {
       penalty <- unlist(epiPenTTree(ttree, epiData, penaltyInfo = trackPenalty))
     }
-    logPen <- ifelse(penalize,log(1+sum(penalty)),0)
+    logPen <- ifelse(penalize,penalty*log(prulebreak),0)
     
     if (updateTTree) {
       #Metropolis update for transmission tree 
@@ -148,7 +149,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
         })
       }) 
     }
-    logPen <- ifelse(penalize,log(1+sum(penalty)),0)
+    logPen <- ifelse(penalize,penalty*log(prulebreak),0)
     
     ttree_lst <- purrr::map(ttree_lst, "ttree") # list of ttree matrices
     
@@ -230,7 +231,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
     } else if(penalize) {
       penalty <- unlist(epiPenTTree(ttree, epiData_lst[k], penaltyInfo = trackPenalty))
     }
-    logPen <- ifelse(penalize,log(1+sum(penalty)),0)
+    logPen <- ifelse(penalize,penalty*log(prulebreak),0)
     
     pTTree_lst[[k]] <- probTTree(ttree$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
     pPTree_lst[[k]] <- probPTreeGivenTTree(ctree_lst[[k]],neg)  

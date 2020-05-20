@@ -15,12 +15,14 @@
 #' }  
 #' \strong{location} a named list of character vectors with vector names matching the case names and each vector listing the locations of that case  \cr  
 #' @param penaltyInfo Whether or not to return information about which penalties are broken for the given transmission tree 
-#' @param exposureP,contactP,locationP numeric amounts for a single penalty in each area of the epidemiological data
 #' @return Either a vector of the numeric penalties or a list of the numeric penalties and a data.frame of information about which events 
 #' caused the penalties
 #' @author Matthew Gould
 #' @export
-epiPenTTree = function(ttree, epiData, penaltyInfo = FALSE, exposureP = 1, contactP = 1, locationP = 1){
+epiPenTTree = function(ttree, epiData, penaltyInfo = FALSE){
+  exposureP = 1
+  contactP = 1
+  locationP = 1
   
   # check input format of the epiData
   if(!is(epiData,"list")){

@@ -31,7 +31,8 @@ infer_multittree_share_param(
   dateT = Inf,
   epiData_lst,
   penalize = TRUE,
-  trackPenalty = FALSE
+  trackPenalty = FALSE,
+  prulebreak = 0.8
 )
 }
 \arguments{
@@ -85,6 +86,8 @@ share the offspring distribution. Allowed parameter names are "neg", "off.r", "o
 \item{penalize}{whether to penalize transmission trees probability based on the \strong{epiData_lst}}
 
 \item{trackPenalty}{whether to save information about the penalty amounts as well as what part of the tree caused each penalty}
+
+\item{prulebreak}{Probability that each penalty for a tree is valid}
 }
 \value{
 list the same size as input, each element contains posterior transmission trees inferred from
