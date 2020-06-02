@@ -80,7 +80,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
       prop <- proposal(ctree$ctree)
       ctree2 <- list(ctree=prop$tree,nam=ctree$nam)
       ttree2 <- extractTTree(ctree2)
-      pTTree2 <- probTTree(ttree2$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      pTTree2 <- probTTree(ttree2$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
       pPTree2 <- probPTreeGivenTTree(ctree2,neg) 
       if (log(runif(1)) < log(prop$qr)+pTTree2 + pPTree2-pTTree-pPTree)  { 
         ctree <- ctree2 
@@ -100,7 +100,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
     if (("off.r" %in% not_share) && updateOff.r) {
       #Metropolis update for off.r, assuming Exp(1) prior 
       off.r2 <- abs(off.r + (runif(1)-0.5)*0.5)
-      pTTree2 <- probTTree(ttree$ttree,off.r2,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      pTTree2 <- probTTree(ttree$ttree,off.r2,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
       if (log(runif(1)) < pTTree2-pTTree-off.r2+off.r)  {off.r <- off.r2;pTTree <- pTTree2}
     }
     
@@ -108,7 +108,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
       #Metropolis update for off.p, assuming Unif(0,1) prior 
       off.p2 <- abs(off.p + (runif(1)-0.5)*0.1)
       if (off.p2>1) off.p2=2-off.p2
-      pTTree2 <- probTTree(ttree$ttree,off.r,off.p2,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      pTTree2 <- probTTree(ttree$ttree,off.r,off.p2,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
       if (log(runif(1)) < pTTree2-pTTree)  {off.p <- off.p2;pTTree <- pTTree2}
     }
     
@@ -117,7 +117,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
       pi2 <- pi + (runif(1)-0.5)*0.1
       if (pi2<0.01) pi2=0.02-pi2
       if (pi2>1) pi2=2-pi2
-      pTTree2 <- probTTree(ttree$ttree,off.r,off.p,pi2,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      pTTree2 <- probTTree(ttree$ttree,off.r,off.p,pi2,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
       log_beta_ratio <- (prior_pi_a - 1) * log(pi2) + (prior_pi_b - 1) * log(1 - pi2) -
         (prior_pi_a - 1) * log(pi) - (prior_pi_b - 1) * log(1 - pi)
       if (log(runif(1)) < pTTree2-pTTree + log_beta_ratio)  {pi <- pi2;pTTree <- pTTree2}       
@@ -233,7 +233,7 @@ infer_multittree_share_param = function(ptree_lst,w.shape=2,w.scale=1,ws.shape=w
     }
     logPen <- ifelse(penalize,penalty*log(prulebreak),0)
     
-    pTTree_lst[[k]] <- probTTree(ttree$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+    pTTree_lst[[k]] <- probTTree(ttree$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
     pPTree_lst[[k]] <- probPTreeGivenTTree(ctree_lst[[k]],neg)  
   }
   mcmc_state <- list(ctree=ctree_lst, pTTree=pTTree_lst, pPTree=pPTree_lst, 

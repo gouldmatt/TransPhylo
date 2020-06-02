@@ -87,7 +87,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
   
   
   record <- vector('list',mcmcIterations/thinning)
-  pTTree <- probTTree(ttree$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+  pTTree <- probTTree(ttree$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
   pPTree <- probPTreeGivenTTree(ctree,neg) 
   
   if(is.infinite(pTTree)){
@@ -151,7 +151,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       prop <- proposal(ctree$ctree) 
       ctree2 <- list(ctree=prop$tree,nam=ctree$nam)
       ttree2 <- extractTTree(ctree2)
-      pTTree2 <- probTTree(ttree2$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      pTTree2 <- probTTree(ttree2$ttree,off.r,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
       pPTree2 <- probPTreeGivenTTree(ctree2,neg) 
       
       if(is.infinite(pTTree2)){
@@ -194,7 +194,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
     if (updateOff.r) {
       #Metropolis update for off.r, assuming Exp(1) prior 
       off.r2 <- abs(off.r + (runif(1)-0.5)*0.5)
-      pTTree2 <- probTTree(ttree$ttree,off.r2,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      pTTree2 <- probTTree(ttree$ttree,off.r2,off.p,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
       
       if(is.infinite(pTTree2)){
         message("pTTree2 is infinite in Metropolis update for off.r, stopping inference and returning record")
@@ -212,7 +212,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       #Metropolis update for off.p, assuming Unif(0,1) prior 
       off.p2 <- abs(off.p + (runif(1)-0.5)*0.1)
       if (off.p2>1) off.p2=2-off.p2
-      pTTree2 <- probTTree(ttree$ttree,off.r,off.p2,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      pTTree2 <- probTTree(ttree$ttree,off.r,off.p2,pi,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
       
       if(is.infinite(pTTree2)){
         message("pTTree2 is infinite in Metropolis update for off.p, stopping inference and returning record")
@@ -231,7 +231,7 @@ inferTTree = function(ptree, w.shape=2, w.scale=1, ws.shape=w.shape, ws.scale=w.
       pi2 <- pi + (runif(1)-0.5)*0.1
       if (pi2<0.01) pi2=0.02-pi2
       if (pi2>1) pi2=2-pi2
-      pTTree2 <- probTTree(ttree$ttree,off.r,off.p,pi2,w.shape,w.scale,ws.shape,ws.scale,dateT) - logPen
+      pTTree2 <- probTTree(ttree$ttree,off.r,off.p,pi2,w.shape,w.scale,ws.shape,ws.scale,dateT) + logPen
       
       if(is.infinite(pTTree2)){
         message("pTTree2 is infinite in Metropolis update for pi, stopping inference and returning record")
